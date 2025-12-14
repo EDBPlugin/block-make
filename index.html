@@ -2,151 +2,251 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ブロック定義エディタ</title>
+    <title>EDBB ブロック定義エディタ（JSONガイド準拠）</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f9; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-        h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f7f9; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 25px; }
+        .section-header { 
+            margin-top: 30px; 
+            padding: 8px 0; 
+            border-bottom: 2px solid #bdc3c7; 
+            color: #3498db; 
+            font-size: 1.2em; 
+            font-weight: bold;
+        }
         label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
-        input[type="text"], textarea, select {
+        input[type="text"], textarea, input[type="color"] {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; /* パディングとボーダーを幅に含める */
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
         }
-        textarea { resize: vertical; min-height: 100px; }
-        .section-header { margin-top: 25px; padding: 5px 0; border-bottom: 1px dashed #ccc; color: #007bff; }
-        .code-section { background-color: #eee; padding: 15px; border-radius: 4px; margin-top: 15px; }
-        .color-preview { display: inline-block; width: 20px; height: 20px; border: 1px solid #333; vertical-align: middle; margin-left: 10px; }
+        input[type="text"]:focus, textarea:focus { border-color: #3498db; }
+        textarea { resize: vertical; min-height: 80px; }
+        .code-section { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 5px solid #95a5a6; }
+        .flex-group { display: flex; gap: 20px; }
+        .flex-group > div { flex: 1; }
+        .color-input-group { display: flex; align-items: flex-end; }
+        #color-hex { flex-grow: 1; margin-right: 10px; }
+        #color-preview { width: 40px; height: 40px; border: 2px solid #333; border-radius: 5px; margin-bottom: 5px; }
+        
         button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #28a745;
+            margin-top: 25px;
+            padding: 12px 25px;
+            background-color: #2ecc71;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.3s;
         }
-        button:hover { background-color: #218838; }
+        button:hover { background-color: #27ae60; }
+        #json-output { 
+            margin-top: 30px; 
+            white-space: pre-wrap; 
+            background-color: #2c3e50; 
+            color: #ecf0f1; 
+            padding: 20px; 
+            border-radius: 5px; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            overflow-x: auto;
+            display: none;
+        }
+        .required::after { content: " *"; color: #e74c3c; }
+        .note { font-size: 0.9em; color: #95a5a6; margin-top: 5px; }
+
+        /* Dynamic Item Management Styles */
+        .dynamic-item { border: 1px solid #bdc3c7; padding: 10px; margin-bottom: 10px; border-radius: 4px; position: relative; }
+        .remove-btn { 
+            position: absolute; 
+            top: 5px; 
+            right: 5px; 
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            border-radius: 3px; 
+            padding: 2px 6px; 
+            cursor: pointer;
+        }
+        .add-btn { 
+            background: #3498db; 
+            padding: 8px 15px; 
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📐 ブロック定義作成ツール</h1>
+    <h1>🧩 EDBB ブロック定義作成ツール</h1>
+    <p>提供されたJSONガイドラインに基づいています。（`schema`: `edbb.block.v1`）</p>
+    
     <form id="blockDefinitionForm">
 
-        <div class="section-header">基本情報</div>
-        <label for="id">ID (内部識別子):</label>
-        <input type="text" id="id" name="id" value="on_ready">
-
-        <label for="type">タイプ (block/event/function):</label>
-        <select id="type" name="type">
-            <option value="event" selected>event</option>
-            <option value="block">block</option>
-            <option value="function">function</option>
-        </select>
-
-        <label for="category">カテゴリ:</label>
-        <input type="text" id="category" name="category" value="event">
-
-        <div class="section-header">表示情報</div>
-        <label for="name">ブロック名 (日本語):</label>
-        <input type="text" id="name" name="name" value="🏁 Botが起動したとき">
-
-        <label for="description">説明:</label>
-        <textarea id="description" name="description">Botのログインが完了し、準備ができた時に1回だけ実行されます。</textarea>
-
-        <div class="section-header">カラー情報</div>
-        <label for="color-role">カラー ロール:</label>
-        <input type="text" id="color-role" name="color-role" value="event">
-        
-        <label for="color-hue">カラー Hue (色相):</label>
-        <input type="number" id="color-hue" name="color-hue" value="30" min="0" max="360">
-        <span class="color-preview" id="color-preview" style="background-color: hsl(30, 100%, 50%);"></span>
-
-        <div class="section-header">接続ポイント (Inputs & Statements)</div>
-        <p>※JSONの構造を直接編集または、より複雑なフォームが必要</p>
-
-        <label>Statements (実行ブロック)</label>
-        <div class="code-section">
-            <label for="statement-id">ID:</label>
-            <input type="text" id="statement-id" value="DO">
-            <label for="statement-label">ラベル:</label>
-            <input type="text" id="statement-label" value="実行する処理">
+        <div class="section-header">基本定義 (必須)</div>
+        <div class="flex-group">
+            <div>
+                <label for="id" class="required">id (ブロックID / ファイル名):</label>
+                <input type="text" id="id" value="on_ready" required>
+            </div>
+            <div>
+                <label for="category" class="required">category (カテゴリID / フォルダ名):</label>
+                <input type="text" id="category" value="event" required>
+            </div>
         </div>
         
-        <div class="section-header">コードテンプレート</div>
-        <label for="code-template">Pythonテンプレート:</label>
-        <textarea id="code-template" name="code-template" rows="5">async def on_ready():
+        <label for="name" class="required">name (ブロック表示名):</label>
+        <input type="text" id="name" value="🏁 Botが起動したとき" required>
+
+        <label for="color-hex" class="required">color (基本色 - 16進数):</label>
+        <div class="color-input-group">
+            <input type="text" id="color-hex" value="#e67e22" pattern="#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?" required oninput="updateColorPreview(this.value)">
+            <input type="color" id="color-picker" value="#e67e22" oninput="updateColorHex(this.value)">
+            <div id="color-preview" style="background-color: #e67e22;"></div>
+        </div>
+        <div class="note">※ガイドにより16進数カラーコードのみ使用可能です。</div>
+
+
+        <div class="section-header">詳細情報 (任意)</div>
+        <label for="description">description (説明 / ツールチップ用):</label>
+        <textarea id="description">Botのログイン完了時に1回だけ実行されます</textarea>
+        
+        <div class="section-header">Inputs (値入力ソケット)</div>
+        <div id="inputs-container">
+            </div>
+        <button type="button" class="add-btn" onclick="addInputItem()">+ Input (入力値) を追加</button>
+
+        <div class="section-header">Statements (実行文ソケット)</div>
+        <div id="statements-container">
+            <div class="dynamic-item" data-type="statement">
+                <label>ID:</label><input type="text" class="statement-id" value="DO">
+                <label>ラベル:</label><input type="text" class="statement-label" value="実行する処理">
+                <button type="button" class="remove-btn" onclick="removeItem(this)">削除</button>
+            </div>
+        </div>
+        <button type="button" class="add-btn" onclick="addStatementItem()">+ Statement (実行ブロック) を追加</button>
+
+        <div class="section-header">Code (コードテンプレート - 必須)</div>
+        <div class="code-section">
+            <label for="code-python" class="required">Pythonコード:</label>
+            <textarea id="code-python" rows="5">async def on_ready():
 {{DO}}
 </textarea>
+            <div class="note">※`{{ID}}`形式で`statements`や`inputs`を展開します。</div>
+        </div>
 
-        <button type="button" onclick="generateJson()">JSONを生成</button>
-        <div id="json-output" style="margin-top: 20px; white-space: pre-wrap; background-color: #333; color: #fff; padding: 15px; border-radius: 4px; display: none;"></div>
+        <button type="button" onclick="generateJson()">💾 JSONを生成</button>
+
+        <div id="json-output"></div>
 
     </form>
 </div>
 
 <script>
-    // Hue値に基づいてプレビューの色を更新する関数
-    document.getElementById('color-hue').addEventListener('input', function() {
-        const hue = this.value;
+    // カラーピッカーとテキストの同期
+    function updateColorPreview(hex) {
         const preview = document.getElementById('color-preview');
-        preview.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
-    });
+        const picker = document.getElementById('color-picker');
+        
+        // 16進数が正しい形式かチェック（簡単なチェック）
+        if (/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(hex)) {
+            preview.style.backgroundColor = hex;
+            picker.value = hex;
+        } else {
+             // 無効な場合はデフォルトに戻すか、エラー表示
+             preview.style.backgroundColor = '#ccc';
+        }
+    }
+    
+    function updateColorHex(hex) {
+        document.getElementById('color-hex').value = hex;
+        document.getElementById('color-preview').style.backgroundColor = hex;
+    }
 
-    // フォームデータからJSONを生成する関数
+    // 動的な Inputs の追加
+    function addInputItem(id = '', type = 'string', label = '') {
+        const container = document.getElementById('inputs-container');
+        const item = document.createElement('div');
+        item.className = 'dynamic-item';
+        item.setAttribute('data-type', 'input');
+        
+        item.innerHTML = `
+            <label>ID:</label><input type="text" class="input-id" value="${id || 'VAL_A'}" required>
+            <label>タイプ (string/number/boolean/any):</label><input type="text" class="input-type" value="${type}" required>
+            <label>ラベル:</label><input type="text" class="input-label" value="${label || '値A'}">
+            <button type="button" class="remove-btn" onclick="removeItem(this)">削除</button>
+        `;
+        container.appendChild(item);
+    }
+
+    // 動的な Statements の追加
+    function addStatementItem(id = '', label = '') {
+        const container = document.getElementById('statements-container');
+        const item = document.createElement('div');
+        item.className = 'dynamic-item';
+        item.setAttribute('data-type', 'statement');
+        
+        item.innerHTML = `
+            <label>ID:</label><input type="text" class="statement-id" value="${id || 'DO_ELSE'}" required>
+            <label>ラベル:</label><input type="text" class="statement-label" value="${label || '代替処理'}">
+            <button type="button" class="remove-btn" onclick="removeItem(this)">削除</button>
+        `;
+        container.appendChild(item);
+    }
+    
+    // アイテムの削除
+    function removeItem(button) {
+        button.closest('.dynamic-item').remove();
+    }
+
+    // JSON 生成関数
     function generateJson() {
         const form = document.getElementById('blockDefinitionForm');
         
-        // 基本的なブロック構造
+        // Inputs の収集
+        const inputs = Array.from(document.querySelectorAll('#inputs-container .dynamic-item')).map(item => ({
+            id: item.querySelector('.input-id').value,
+            type: item.querySelector('.input-type').value,
+            label: item.querySelector('.input-label').value
+        }));
+        
+        // Statements の収集
+        const statements = Array.from(document.querySelectorAll('#statements-container .dynamic-item')).map(item => ({
+            id: item.querySelector('.statement-id').value,
+            label: item.querySelector('.statement-label').value
+        }));
+
+        // ブロック定義の構築
         const blockDefinition = {
             "schema": "edbb.block.v1",
             "id": form['id'].value,
-            "type": form['type'].value,
             "category": form['category'].value,
             "name": form['name'].value,
-            "description": form['description'].value,
             
-            "color": {
-                "role": form['color-role'].value,
-                "hue": parseInt(form['color-hue'].value)
-            },
+            // descriptionは空でなければ含める (任意)
+            ...(form['description'].value && { "description": form['description'].value }), 
             
-            // inputsは今回は空の配列として固定
-            "inputs": [], 
+            "color": form['color-hex'].value,
             
-            // statementsはフォームの内容から構築
-            "statements": [
-                {
-                    "id": document.getElementById('statement-id').value,
-                    "label": document.getElementById('statement-label').value
-                }
-            ],
+            // inputs/statementsは空でなければ含める
+            ...(inputs.length > 0 && { "inputs": inputs }), 
+            ...(statements.length > 0 && { "statements": statements }), 
             
-            // codeはテンプレートの内容から構築
             "code": {
-                "python": {
-                    "template": document.getElementById('code-template').value
-                }
+                "python": form['code-python'].value
             }
         };
 
         const jsonOutput = document.getElementById('json-output');
         jsonOutput.textContent = JSON.stringify(blockDefinition, null, 2);
         jsonOutput.style.display = 'block';
+        jsonOutput.scrollIntoView({ behavior: 'smooth' });
     }
-
-    // 初期の色設定
-    document.addEventListener('DOMContentLoaded', function() {
-        const initialHue = document.getElementById('color-hue').value;
-        document.getElementById('color-preview').style.backgroundColor = `hsl(${initialHue}, 100%, 50%)`;
-    });
-
 </script>
 
 </body>
