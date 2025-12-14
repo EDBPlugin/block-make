@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>EDBB ブロック定義エディタ（JSONガイド準拠）</title>
+    <title>EDBB ブロック定義エディタ（ブランク）</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f7f9; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
@@ -32,7 +32,7 @@
         .flex-group > div { flex: 1; }
         .color-input-group { display: flex; align-items: flex-end; }
         #color-hex { flex-grow: 1; margin-right: 10px; }
-        #color-preview { width: 40px; height: 40px; border: 2px solid #333; border-radius: 5px; margin-bottom: 5px; }
+        #color-preview { width: 40px; height: 40px; border: 2px solid #333; border-radius: 5px; margin-bottom: 5px; background-color: #ffffff; }
         
         button {
             margin-top: 25px;
@@ -83,8 +83,8 @@
 <body>
 
 <div class="container">
-    <h1>🧩 EDBB ブロック定義作成ツール</h1>
-    <p>提供されたJSONガイドラインに基づいています。（`schema`: `edbb.block.v1`）</p>
+    <h1>🧩 EDBB ブロック定義作成ツール (ブランク)</h1>
+    <p>提供されたJSONガイドラインに基づいています。すべてのフィールドを入力してください。</p>
     
     <form id="blockDefinitionForm">
 
@@ -92,51 +92,44 @@
         <div class="flex-group">
             <div>
                 <label for="id" class="required">id (ブロックID / ファイル名):</label>
-                <input type="text" id="id" value="on_ready" required>
+                <input type="text" id="id" value="" required placeholder="例: my_new_block">
             </div>
             <div>
                 <label for="category" class="required">category (カテゴリID / フォルダ名):</label>
-                <input type="text" id="category" value="event" required>
+                <input type="text" id="category" value="" required placeholder="例: action">
             </div>
         </div>
         
         <label for="name" class="required">name (ブロック表示名):</label>
-        <input type="text" id="name" value="🏁 Botが起動したとき" required>
+        <input type="text" id="name" value="" required placeholder="例: 🚀 新しい処理を実行">
 
         <label for="color-hex" class="required">color (基本色 - 16進数):</label>
         <div class="color-input-group">
-            <input type="text" id="color-hex" value="#e67e22" pattern="#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?" required oninput="updateColorPreview(this.value)">
-            <input type="color" id="color-picker" value="#e67e22" oninput="updateColorHex(this.value)">
-            <div id="color-preview" style="background-color: #e67e22;"></div>
+            <input type="text" id="color-hex" value="#3498db" pattern="#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?" required oninput="updateColorPreview(this.value)">
+            <input type="color" id="color-picker" value="#3498db" oninput="updateColorHex(this.value)">
+            <div id="color-preview" style="background-color: #3498db;"></div>
         </div>
         <div class="note">※ガイドにより16進数カラーコードのみ使用可能です。</div>
 
 
         <div class="section-header">詳細情報 (任意)</div>
         <label for="description">description (説明 / ツールチップ用):</label>
-        <textarea id="description">Botのログイン完了時に1回だけ実行されます</textarea>
+        <textarea id="description" placeholder="このブロックが何をするのかを記述します。"></textarea>
         
         <div class="section-header">Inputs (値入力ソケット)</div>
         <div id="inputs-container">
-            </div>
+        </div>
         <button type="button" class="add-btn" onclick="addInputItem()">+ Input (入力値) を追加</button>
 
         <div class="section-header">Statements (実行文ソケット)</div>
         <div id="statements-container">
-            <div class="dynamic-item" data-type="statement">
-                <label>ID:</label><input type="text" class="statement-id" value="DO">
-                <label>ラベル:</label><input type="text" class="statement-label" value="実行する処理">
-                <button type="button" class="remove-btn" onclick="removeItem(this)">削除</button>
-            </div>
         </div>
         <button type="button" class="add-btn" onclick="addStatementItem()">+ Statement (実行ブロック) を追加</button>
 
         <div class="section-header">Code (コードテンプレート - 必須)</div>
         <div class="code-section">
             <label for="code-python" class="required">Pythonコード:</label>
-            <textarea id="code-python" rows="5">async def on_ready():
-{{DO}}
-</textarea>
+            <textarea id="code-python" rows="5" placeholder="例: print('Hello')\n{{DO}}"></textarea>
             <div class="note">※`{{ID}}`形式で`statements`や`inputs`を展開します。</div>
         </div>
 
@@ -153,12 +146,10 @@
         const preview = document.getElementById('color-preview');
         const picker = document.getElementById('color-picker');
         
-        // 16進数が正しい形式かチェック（簡単なチェック）
         if (/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(hex)) {
             preview.style.backgroundColor = hex;
             picker.value = hex;
         } else {
-             // 無効な場合はデフォルトに戻すか、エラー表示
              preview.style.backgroundColor = '#ccc';
         }
     }
@@ -176,9 +167,9 @@
         item.setAttribute('data-type', 'input');
         
         item.innerHTML = `
-            <label>ID:</label><input type="text" class="input-id" value="${id || 'VAL_A'}" required>
-            <label>タイプ (string/number/boolean/any):</label><input type="text" class="input-type" value="${type}" required>
-            <label>ラベル:</label><input type="text" class="input-label" value="${label || '値A'}">
+            <label>ID:</label><input type="text" class="input-id" value="${id}" required placeholder="例: TEXT_INPUT">
+            <label>タイプ (string/number/boolean/any):</label><input type="text" class="input-type" value="${type || 'string'}" required>
+            <label>ラベル:</label><input type="text" class="input-label" value="${label}" placeholder="例: 表示する文字">
             <button type="button" class="remove-btn" onclick="removeItem(this)">削除</button>
         `;
         container.appendChild(item);
@@ -192,8 +183,8 @@
         item.setAttribute('data-type', 'statement');
         
         item.innerHTML = `
-            <label>ID:</label><input type="text" class="statement-id" value="${id || 'DO_ELSE'}" required>
-            <label>ラベル:</label><input type="text" class="statement-label" value="${label || '代替処理'}">
+            <label>ID:</label><input type="text" class="statement-id" value="${id}" required placeholder="例: DO">
+            <label>ラベル:</label><input type="text" class="statement-label" value="${label}" placeholder="例: 実行する処理">
             <button type="button" class="remove-btn" onclick="removeItem(this)">削除</button>
         `;
         container.appendChild(item);
@@ -221,7 +212,12 @@
             label: item.querySelector('.statement-label').value
         }));
 
-        // ブロック定義の構築
+        // ブロック定義の構築 (必須フィールドが空の場合は JSON を出力しない)
+        if (!form['id'].value || !form['category'].value || !form['name'].value || !form['color-hex'].value || !form['code-python'].value) {
+            alert("必須項目が入力されていません。");
+            return;
+        }
+
         const blockDefinition = {
             "schema": "edbb.block.v1",
             "id": form['id'].value,
@@ -247,6 +243,11 @@
         jsonOutput.style.display = 'block';
         jsonOutput.scrollIntoView({ behavior: 'smooth' });
     }
+    
+    // 初期カラー設定
+    document.addEventListener('DOMContentLoaded', function() {
+        updateColorPreview(document.getElementById('color-hex').value);
+    });
 </script>
 
 </body>
